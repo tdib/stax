@@ -7,6 +7,8 @@ mod util;
 use clap::{Parser, Subcommand};
 use commands::{create_child_branch, track_branch, untrack_branch};
 
+use crate::state::StateCtx;
+
 #[derive(Parser)]
 #[command(name = "stax")]
 struct Cli {
@@ -24,11 +26,12 @@ enum Cmd {
 fn main() {
     // TODO: Ensure git is installed
     let cli = Cli::parse();
+    let mut state = StateCtx::load().expect("Failed to load Stax state");
 
     let result = match cli.cmd {
-        Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None), // TODO: Fix None
+        Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None, &mut state), // TODO: Fix None
         Cmd::Untrack { branch_name } => untrack_branch(branch_name.as_deref()),
-        Cmd::Create { branch_name } => create_child_branch(&branch_name),
+        Cmd::Create { branch_name } => create_child_branch(&branch_name, &mut state),
     };
 
     match result {
