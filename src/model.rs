@@ -9,4 +9,5 @@ pub struct State {
 pub struct Branch {
     pub name: String,
     pub parent: Option<String>,
+    pub children: Vec<String>,
 }
