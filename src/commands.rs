@@ -3,7 +3,7 @@ use anyhow::Context;
 use crate::git_util::{create_git_branch, get_current_git_branch, git_branch_exists};
 use crate::model::Branch;
 use crate::state::StateCtx;
-use crate::util::get_target_branch;
+use crate::util::{get_target_branch, print_branch_tree};
 
 pub fn track_branch(
     branch_name: Option<&str>,
@@ -83,9 +83,6 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
 }
 
 pub fn list_tracked_branches(state: &StateCtx) -> anyhow::Result<()> {
-    println!("Tracked branches:");
-    for b in &state.branches {
-        println!("  {}", b.name);
-    }
+    print_branch_tree(&state.branches);
     Ok(())
 }
