@@ -23,3 +23,11 @@ pub fn create_git_branch(branch_name: &str) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub fn git_branch_exists(branch_name: &str) -> anyhow::Result<bool> {
+    let out = Command::new("git")
+        .args(["rev-parse", "--verify", "--quiet", branch_name])
+        .output()?;
+
+    Ok(!out.stdout.is_empty())
+}

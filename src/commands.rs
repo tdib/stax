@@ -1,6 +1,6 @@
 use anyhow::Context;
 
-use crate::git_util::{create_git_branch, get_current_git_branch};
+use crate::git_util::{create_git_branch, get_current_git_branch, git_branch_exists};
 use crate::model::Branch;
 use crate::state::StateCtx;
 use crate::util::get_target_branch;
@@ -61,8 +61,12 @@ pub fn untrack_branch(branch_name: Option<&str>, state: &mut StateCtx) -> anyhow
 
 pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> anyhow::Result<()> {
     let parent_branch_name = get_current_git_branch().expect("Failed to get current branch name");
-    create_git_branch(child_branch_name)
-        .expect(&format!("Failed to create branch {child_branch_name}"));
+    if git_branch_exists(child_branch_name).expect("Failed to check if branch exists") {
+        anyhow::bail!(format!("{child_branch_name} already exists"))
+    } else {
+        create_git_branch(child_branch_name)
+            .expect(&format!("Failed to create branch {child_branch_name}"));
+    }
 
     state.modify(|s| {
         s.branches
