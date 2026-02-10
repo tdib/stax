@@ -82,7 +82,7 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
     Ok(())
 }
 
-pub fn list_tracked_branches(state: &StateCtx) -> anyhow::Result<()> {
+pub fn command_print_branch_tree(state: &StateCtx) -> anyhow::Result<()> {
     print_branch_tree(&state.branches);
     Ok(())
 }
