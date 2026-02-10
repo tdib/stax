@@ -1,12 +1,11 @@
 use crate::model::State;
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::ops::Deref;
 
 const STATE_FILE: &str = ".stax.json";
 
 pub struct StateCtx {
-    #[allow(dead_code)]
     file: File,
     current_state: State,
 }
@@ -46,21 +45,17 @@ impl StateCtx {
     pub fn modify(&mut self, f: impl FnOnce(&mut State)) {
         f(&mut self.current_state);
 
-        save_state(&self.current_state).expect("Failed to save state to disk");
+        self.save_state().expect("Failed to save state to disk");
     }
-}
 
-fn save_state(state: &State) -> anyhow::Result<()> {
-    let json = serde_json::to_string_pretty(state)?;
+    fn save_state(&mut self) -> anyhow::Result<()> {
+        let json = serde_json::to_string_pretty(&self.current_state)?;
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(STATE_FILE)?;
+        self.file.set_len(0)?;
+        self.file.seek(SeekFrom::Start(0))?;
+        self.file.write_all(json.as_bytes())?;
+        self.file.sync_all()?;
 
-    file.write_all(json.as_bytes())?;
-    file.sync_all()?;
-
-    Ok(())
+        Ok(())
+    }
 }
