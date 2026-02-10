@@ -40,7 +40,7 @@ pub fn untrack_branch(branch_name: Option<&str>, state: &mut StateCtx) -> anyhow
         .branches
         .iter()
         .find(|b| b.name == target_branch_name)
-        .with_context(|| format!("Branch '{}' is not currently tracked", target_branch_name))?;
+        .with_context(|| format!("Branch '{target_branch_name}' is not currently tracked"))?;
 
     if !target_branch.children.is_empty() {
         anyhow::bail!("Cannot untrack '{target_branch_name}', it has children");
@@ -61,7 +61,8 @@ pub fn untrack_branch(branch_name: Option<&str>, state: &mut StateCtx) -> anyhow
 
 pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> anyhow::Result<()> {
     let parent_branch_name = get_current_git_branch().expect("Failed to get current branch name");
-    create_git_branch(child_branch_name).expect("Failed to create branch {branch_name}");
+    create_git_branch(child_branch_name)
+        .expect(&format!("Failed to create branch {child_branch_name}"));
 
     state.modify(|s| {
         s.branches
@@ -73,7 +74,7 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
     });
 
     track_branch(Some(&child_branch_name), Some(&parent_branch_name), state)
-        .expect("Failed to track branch {branch_name}");
+        .expect(&format!("Failed to track branch {child_branch_name}"));
     Ok(())
 }
 
