@@ -70,3 +70,11 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
         .expect("Failed to track branch {branch_name}");
     Ok(())
 }
+
+pub fn list_tracked_branches(state: &StateCtx) -> anyhow::Result<()> {
+    println!("Tracked branches:");
+    for b in &state.branches {
+        println!("  {}", b.name);
+    }
+    Ok(())
+}

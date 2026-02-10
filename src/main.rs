@@ -5,7 +5,7 @@ mod state;
 mod util;
 
 use clap::{Parser, Subcommand};
-use commands::{create_child_branch, track_branch, untrack_branch};
+use commands::{create_child_branch, list_tracked_branches, track_branch, untrack_branch};
 
 use crate::state::StateCtx;
 
@@ -21,6 +21,7 @@ enum Cmd {
     Track { branch_name: Option<String> },
     Untrack { branch_name: Option<String> },
     Create { branch_name: String },
+    List,
 }
 
 fn main() {
@@ -32,6 +33,7 @@ fn main() {
         Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None, &mut state), // TODO: Fix None
         Cmd::Untrack { branch_name } => untrack_branch(branch_name.as_deref()),
         Cmd::Create { branch_name } => create_child_branch(&branch_name, &mut state),
+        Cmd::List => list_tracked_branches(&state),
     };
 
     match result {
