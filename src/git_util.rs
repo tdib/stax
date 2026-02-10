@@ -31,3 +31,16 @@ pub fn git_branch_exists(branch_name: &str) -> anyhow::Result<bool> {
 
     Ok(!out.stdout.is_empty())
 }
+
+pub fn git_rebase(onto: &str, since: &str) -> anyhow::Result<()> {
+    println!("Rebasing current branch onto {} since {}", onto, since);
+    let out = Command::new("git")
+        .args(["rebase", "--onto", onto, since])
+        .output()?;
+
+    if !out.status.success() {
+        anyhow::bail!("git error: {}", String::from_utf8_lossy(&out.stderr));
+    }
+
+    Ok(())
+}

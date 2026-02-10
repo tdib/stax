@@ -1,6 +1,6 @@
 use anyhow::Context;
 
-use crate::git_util::{create_git_branch, get_current_git_branch, git_branch_exists};
+use crate::git_util::{create_git_branch, get_current_git_branch, git_branch_exists, git_rebase};
 use crate::model::Branch;
 use crate::state::StateCtx;
 use crate::util::{get_target_branch, print_branch_tree};
@@ -84,5 +84,34 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
 
 pub fn command_print_branch_tree(state: &StateCtx) -> anyhow::Result<()> {
     print_branch_tree(&state.branches);
+    Ok(())
+}
+
+pub fn rebase(onto: String, state: &mut StateCtx) -> anyhow::Result<()> {
+    // TODO: Handle conflicts
+    let current_branch = state
+        .get_current_branch()
+        .expect("Failed to read current branch from Stax state");
+
+    git_rebase(
+        &onto,
+        current_branch.parent.as_deref().expect(&format!(
+            "Failed to rebase onto {onto}; {} has no parent",
+            current_branch.name
+        )),
+    )
+    .expect(&format!(
+        "Failed to rebase {} onto {}",
+        current_branch.name, onto
+    ));
+
+    state.modify(|s| {
+        s.get_current_branch_mut()
+            .expect("Failed to read current branch from Stax state")
+            .parent = Some(onto);
+    });
+
+    // TODO: Rebase children?
+
     Ok(())
 }

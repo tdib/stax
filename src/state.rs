@@ -1,4 +1,5 @@
-use crate::model::State;
+use crate::git_util::get_current_git_branch;
+use crate::model::{Branch, State};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::ops::Deref;
@@ -57,5 +58,27 @@ impl StateCtx {
         self.file.sync_all()?;
 
         Ok(())
+    }
+}
+
+impl State {
+    pub fn get_current_branch(&self) -> Option<&Branch> {
+        let current_git_branch_name =
+            get_current_git_branch().expect("Failed to get current git branch");
+
+        if let Some(current_branch) = self
+            .branches
+            .iter()
+            .find(|b| b.name == current_git_branch_name)
+        {
+            Some(current_branch)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_current_branch_mut(&mut self) -> Option<&mut Branch> {
+        let name = get_current_git_branch().ok()?;
+        self.branches.iter_mut().find(|b| b.name == name)
     }
 }

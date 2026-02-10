@@ -7,7 +7,7 @@ mod util;
 use clap::{Parser, Subcommand};
 use commands::{command_print_branch_tree, create_child_branch, track_branch, untrack_branch};
 
-use crate::state::StateCtx;
+use crate::{commands::rebase, state::StateCtx};
 
 #[derive(Parser)]
 #[command(name = "stax")]
@@ -22,6 +22,7 @@ enum Cmd {
     Untrack { branch_name: Option<String> },
     Create { branch_name: String },
     Tree,
+    Rebase { onto: String },
 }
 
 fn main() {
@@ -34,6 +35,7 @@ fn main() {
         Cmd::Untrack { branch_name } => untrack_branch(branch_name.as_deref(), &mut state),
         Cmd::Create { branch_name } => create_child_branch(&branch_name, &mut state),
         Cmd::Tree => command_print_branch_tree(&state),
+        Cmd::Rebase { onto } => rebase(onto, &mut state),
     };
 
     match result {
