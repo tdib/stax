@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 use crate::git_util::{create_git_branch, get_current_git_branch};
 use crate::model::Branch;
 use crate::state::StateCtx;
@@ -31,25 +33,29 @@ pub fn track_branch(
     Ok(())
 }
 
-pub fn untrack_branch(branch_name: Option<&str>) -> anyhow::Result<()> {
-    match branch_name {
-        None => {
-            println!("No branch passed in to untrack... Untracking current");
-            let curr_branch = get_current_git_branch();
+pub fn untrack_branch(branch_name: Option<&str>, state: &mut StateCtx) -> anyhow::Result<()> {
+    let target_branch_name = get_target_branch(branch_name).expect("Failed to get target branch");
 
-            match curr_branch {
-                Ok(curr_branch) => {
-                    println!("Current branch: {}", curr_branch)
-                }
-                Err(e) => {
-                    println!("Error: {}", e)
-                }
-            };
+    let target_branch = state
+        .branches
+        .iter()
+        .find(|b| b.name == target_branch_name)
+        .with_context(|| format!("Branch '{}' is not currently tracked", target_branch_name))?;
+
+    if !target_branch.children.is_empty() {
+        anyhow::bail!("Cannot untrack '{target_branch_name}', it has children");
+    }
+
+    state.modify(|s| {
+        // Remove the branch itself
+        s.branches.retain(|b| b.name != target_branch_name);
+
+        // Remove any references to the branch
+        for b in &mut s.branches {
+            b.children.retain(|child| child != &target_branch_name);
         }
-        Some(branch_name) => {
-            println!("Passed branch name: {}", branch_name);
-        }
-    };
+    });
+
     Ok(())
 }
 
