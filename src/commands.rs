@@ -87,7 +87,10 @@ pub fn create_child_branch(child_branch_name: &str, state: &mut StateCtx) -> any
 }
 
 pub fn command_print_branch_tree(state: &StateCtx) -> anyhow::Result<()> {
-    print_branch_tree(&state.branches);
+    print_branch_tree(
+        &state.branches,
+        &get_current_git_branch().expect("Failed to get current git branch"),
+    );
     Ok(())
 }
 
