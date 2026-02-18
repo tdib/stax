@@ -18,11 +18,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    Track { branch_name: Option<String> },
-    Untrack { branch_name: Option<String> },
-    Stack { branch_name: String },
-    Tree,
     Rebase { onto: String },
+    Stack { branch_name: String },
+    Track { branch_name: Option<String> },
+    Tree,
+    Untrack { branch_name: Option<String> },
 }
 
 fn main() {
@@ -31,11 +31,11 @@ fn main() {
     let mut state = StateCtx::load().expect("Failed to load Stax state");
 
     let result = match cli.cmd {
-        Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None, &mut state), // TODO: Fix None
-        Cmd::Untrack { branch_name } => untrack_branch(branch_name.as_deref(), &mut state),
-        Cmd::Stack { branch_name } => create_child_branch(&branch_name, &mut state),
-        Cmd::Tree => command_print_branch_tree(&state),
         Cmd::Rebase { onto } => rebase(onto, &mut state),
+        Cmd::Stack { branch_name } => create_child_branch(&branch_name, &mut state),
+        Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None, &mut state), // TODO: Fix None
+        Cmd::Tree => command_print_branch_tree(&state),
+        Cmd::Untrack { branch_name } => untrack_branch(branch_name.as_deref(), &mut state),
     };
 
     match result {
