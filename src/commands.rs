@@ -164,6 +164,12 @@ pub fn prune(state: &mut StateCtx) -> anyhow::Result<()> {
         .iter()
         .filter(|b| !&git_branch_names.contains(&&b.name))
         .collect::<Vec<&Branch>>();
+
+    if branches_to_remove.is_empty() {
+        println!("Stax state is clean, no branches to prune");
+        return Ok(());
+    }
+
     let branch_names_to_remove: HashSet<String> =
         branches_to_remove.iter().map(|b| b.name.clone()).collect();
 
