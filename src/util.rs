@@ -1,5 +1,8 @@
 use crate::git_util::{GitBranch, get_current_git_branch, get_git_branches};
 use crate::model::Branch;
+
+use dialoguer::FuzzySelect;
+use dialoguer::{Select, theme::ColorfulTheme};
 use std::collections::{HashMap, HashSet};
 
 pub fn get_target_branch(branch_name: Option<&str>) -> anyhow::Result<String> {
@@ -101,16 +104,17 @@ where
         ));
     }
 
-    if matches.len() > 1 {
-        // TODO: If branch matches directly, checkout?
-        println!("Matched multiple branches:");
-        matches.iter().for_each(|m| println!("  {}", m.ref_name));
-        anyhow::bail!("Matched multiple branches")
-        // TODO: Implement multiple branch match selection
-    }
+    let selected_branch = if matches.len() > 1 {
+        let idx = FuzzySelect::with_theme(&ColorfulTheme::default())
+            .with_prompt("Matched multiple branches. Type to filter, Enter to select")
+            .items(matches.clone())
+            .default(0)
+            .interact()?;
 
-    f(&matches
-        .first()
-        .expect("Failed to get first matched branch")
-        .ref_name)
+        &matches[idx]
+    } else {
+        matches.first().expect("Failed to get first matched branch")
+    };
+
+    f(&selected_branch.ref_name)
 }

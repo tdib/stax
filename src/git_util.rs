@@ -1,9 +1,15 @@
 use std::process::Command;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GitBranch {
     pub ref_name: String,
     directory: Option<String>, // TODO: Figure out directories for worktree support
+}
+
+impl ToString for GitBranch {
+    fn to_string(&self) -> String {
+        self.ref_name.clone()
+    }
 }
 
 pub fn get_current_git_branch() -> anyhow::Result<String> {
