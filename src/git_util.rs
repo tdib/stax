@@ -80,7 +80,10 @@ pub fn git_checkout(branch_name: &str) -> anyhow::Result<()> {
 }
 
 pub fn git_rebase(onto: &str, since: &str) -> anyhow::Result<()> {
-    println!("Rebasing current branch onto {} since {}", onto, since);
+    println!(
+        "Rebasing current branch onto {} (all commits since {})",
+        onto, since
+    );
     let out = Command::new("git")
         .args(["rebase", "--onto", onto, since])
         .output()?;
