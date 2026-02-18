@@ -123,8 +123,13 @@ pub fn rebase(onto: String, state: &mut StateCtx) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn checkout(branch_matchers: Vec<String>) -> anyhow::Result<()> {
-    execute_on_branch(branch_matchers, |branch_name| git_checkout(branch_name))
+pub fn checkout(branch_matchers: Vec<String>, state: &StateCtx) -> anyhow::Result<()> {
+    let result = execute_on_branch(branch_matchers, |branch_name| git_checkout(branch_name));
+    print_branch_tree(
+        &state.branches,
+        &get_current_git_branch().expect("Failed to get current git branch"),
+    );
+    result
 }
 
 pub fn prune(state: &mut StateCtx) -> anyhow::Result<()> {
