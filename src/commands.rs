@@ -1,6 +1,9 @@
 use anyhow::Context;
 
-use crate::git_util::{create_git_branch, get_current_git_branch, git_branch_exists, git_rebase};
+use crate::git_util::{
+    GitBranch, create_git_branch, get_current_git_branch, get_git_branches, git_branch_exists,
+    git_checkout, git_rebase,
+};
 use crate::model::Branch;
 use crate::state::StateCtx;
 use crate::util::{get_target_branch, print_branch_tree};
@@ -114,4 +117,39 @@ pub fn rebase(onto: String, state: &mut StateCtx) -> anyhow::Result<()> {
     // TODO: Rebase children?
 
     Ok(())
+}
+
+pub fn checkout(branch_matchers: Vec<String>, state: &StateCtx) -> anyhow::Result<()> {
+    let git_branches = get_git_branches().expect("Failed to get git branches");
+
+    // Find branches that match all `branch_matchers`
+    let matches: Vec<GitBranch> = git_branches
+        .into_iter()
+        .filter(|b| {
+            branch_matchers
+                .iter()
+                .all(|matcher| b.ref_name.contains(matcher))
+        })
+        .collect();
+
+    if matches.is_empty() {
+        anyhow::bail!(format!(
+            "No branches matched the patterns {:?}",
+            branch_matchers,
+        ));
+    }
+
+    if matches.len() > 1 {
+        println!("Matched multiple branches:");
+        matches.iter().for_each(|m| println!("  {}", m.ref_name));
+        anyhow::bail!("Matched multiple branches")
+        // TODO: Implement multiple branch match selection
+    }
+
+    git_checkout(
+        &matches
+            .first()
+            .expect("Failed to get first matched branch")
+            .ref_name,
+    )
 }

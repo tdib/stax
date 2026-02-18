@@ -5,7 +5,9 @@ mod state;
 mod util;
 
 use clap::{Parser, Subcommand};
-use commands::{command_print_branch_tree, create_child_branch, track_branch, untrack_branch};
+use commands::{
+    checkout, command_print_branch_tree, create_child_branch, track_branch, untrack_branch,
+};
 
 use crate::{commands::rebase, state::StateCtx};
 
@@ -18,11 +20,23 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    Rebase { onto: String },
-    Stack { branch_name: String },
-    Track { branch_name: Option<String> },
+    #[command(aliases = ["ck"])]
+    Checkout {
+        branch_name: Vec<String>,
+    },
+    Rebase {
+        onto: String,
+    },
+    Stack {
+        branch_name: String,
+    },
+    Track {
+        branch_name: Option<String>,
+    },
     Tree,
-    Untrack { branch_name: Option<String> },
+    Untrack {
+        branch_name: Option<String>,
+    },
 }
 
 fn main() {
@@ -31,6 +45,7 @@ fn main() {
     let mut state = StateCtx::load().expect("Failed to load Stax state");
 
     let result = match cli.cmd {
+        Cmd::Checkout { branch_name } => checkout(branch_name, &state),
         Cmd::Rebase { onto } => rebase(onto, &mut state),
         Cmd::Stack { branch_name } => create_child_branch(&branch_name, &mut state),
         Cmd::Track { branch_name } => track_branch(branch_name.as_deref(), None, &mut state), // TODO: Fix None

@@ -32,6 +32,46 @@ pub fn git_branch_exists(branch_name: &str) -> anyhow::Result<bool> {
     Ok(!out.stdout.is_empty())
 }
 
+#[derive(Debug)]
+pub struct GitBranch {
+    pub ref_name: String,
+    directory: Option<String>, // TODO: Figure out directories for worktree support
+}
+
+pub fn get_git_branches() -> anyhow::Result<Vec<GitBranch>> {
+    let out = Command::new("git")
+        .args(["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
+        .output()?;
+
+    let out_string = String::from_utf8(out.stdout)?;
+    let git_branches: Vec<&str> = out_string.lines().collect();
+
+    if !out.status.success() {
+        anyhow::bail!("git error: {}", String::from_utf8_lossy(&out.stderr));
+    }
+
+    Ok(git_branches
+        .into_iter()
+        .map(|b| GitBranch {
+            ref_name: b.to_string(),
+            directory: None,
+        })
+        .collect())
+}
+
+pub fn git_checkout(branch_name: &str) -> anyhow::Result<()> {
+    // TODO: Add support for checkout to worktrees
+    let out = Command::new("git")
+        .args(["checkout", branch_name])
+        .output()?;
+
+    if !out.status.success() {
+        anyhow::bail!("git error: {}", String::from_utf8_lossy(&out.stderr));
+    }
+
+    Ok(())
+}
+
 pub fn git_rebase(onto: &str, since: &str) -> anyhow::Result<()> {
     println!("Rebasing current branch onto {} since {}", onto, since);
     let out = Command::new("git")
