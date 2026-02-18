@@ -100,13 +100,15 @@ pub fn rebase(onto: String, state: &mut StateCtx) -> anyhow::Result<()> {
         .get_current_branch()
         .expect("Failed to read current branch from Stax state");
 
-    git_rebase(
-        &onto,
-        current_branch.parent.as_deref().expect(&format!(
-            "Failed to rebase onto {onto}; {} has no parent",
-            current_branch.name
-        )),
-    )
+    execute_on_branch(vec![onto.clone()], |b| {
+        git_rebase(
+            &b,
+            current_branch.parent.as_deref().expect(&format!(
+                "Failed to rebase onto {onto}; {} has no parent",
+                current_branch.name
+            )),
+        )
+    })
     .expect(&format!(
         "Failed to rebase {} onto {}",
         current_branch.name, onto
