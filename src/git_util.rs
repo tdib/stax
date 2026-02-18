@@ -1,5 +1,11 @@
 use std::process::Command;
 
+#[derive(Debug)]
+pub struct GitBranch {
+    pub ref_name: String,
+    directory: Option<String>, // TODO: Figure out directories for worktree support
+}
+
 pub fn get_current_git_branch() -> anyhow::Result<String> {
     let out = Command::new("git")
         .args(["rev-parse", "--abbrev-ref", "HEAD"])
@@ -30,12 +36,6 @@ pub fn git_branch_exists(branch_name: &str) -> anyhow::Result<bool> {
         .output()?;
 
     Ok(!out.stdout.is_empty())
-}
-
-#[derive(Debug)]
-pub struct GitBranch {
-    pub ref_name: String,
-    directory: Option<String>, // TODO: Figure out directories for worktree support
 }
 
 pub fn get_git_branches() -> anyhow::Result<Vec<GitBranch>> {

@@ -7,7 +7,7 @@ use crate::git_util::{
 };
 use crate::model::Branch;
 use crate::state::StateCtx;
-use crate::util::{get_target_branch, print_branch_tree};
+use crate::util::{execute_on_branch, get_target_branch, print_branch_tree};
 
 pub fn track_branch(
     branch_name: Option<&str>,
@@ -120,39 +120,8 @@ pub fn rebase(onto: String, state: &mut StateCtx) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn checkout(branch_matchers: Vec<String>, state: &StateCtx) -> anyhow::Result<()> {
-    let git_branches = get_git_branches().expect("Failed to get git branches");
-
-    // Find branches that match all `branch_matchers`
-    let matches: Vec<GitBranch> = git_branches
-        .into_iter()
-        .filter(|b| {
-            branch_matchers
-                .iter()
-                .all(|matcher| b.ref_name.contains(matcher))
-        })
-        .collect();
-
-    if matches.is_empty() {
-        anyhow::bail!(format!(
-            "No branches matched the patterns {:?}",
-            branch_matchers,
-        ));
-    }
-
-    if matches.len() > 1 {
-        println!("Matched multiple branches:");
-        matches.iter().for_each(|m| println!("  {}", m.ref_name));
-        anyhow::bail!("Matched multiple branches")
-        // TODO: Implement multiple branch match selection
-    }
-
-    git_checkout(
-        &matches
-            .first()
-            .expect("Failed to get first matched branch")
-            .ref_name,
-    )
+pub fn checkout(branch_matchers: Vec<String>) -> anyhow::Result<()> {
+    execute_on_branch(branch_matchers, |branch_name| git_checkout(branch_name))
 }
 
 pub fn prune(state: &mut StateCtx) -> anyhow::Result<()> {

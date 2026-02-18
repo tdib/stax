@@ -1,4 +1,4 @@
-use crate::git_util::get_current_git_branch;
+use crate::git_util::{GitBranch, get_current_git_branch, get_git_branches};
 use crate::model::Branch;
 use std::collections::{HashMap, HashSet};
 
@@ -76,4 +76,41 @@ fn print_subtree<'a>(
     }
 
     visiting.remove(node);
+}
+
+pub fn execute_on_branch<F>(branch_matchers: Vec<String>, f: F) -> anyhow::Result<()>
+where
+    F: FnOnce(&String) -> anyhow::Result<()>,
+{
+    let git_branches = get_git_branches().expect("Failed to get git branches");
+
+    // Find branches that match all `branch_matchers`
+    let matches: Vec<GitBranch> = git_branches
+        .into_iter()
+        .filter(|b| {
+            branch_matchers
+                .iter()
+                .all(|matcher| b.ref_name.contains(matcher))
+        })
+        .collect();
+
+    if matches.is_empty() {
+        anyhow::bail!(format!(
+            "No branches matched the patterns {:?}",
+            branch_matchers,
+        ));
+    }
+
+    if matches.len() > 1 {
+        // TODO: If branch matches directly, checkout?
+        println!("Matched multiple branches:");
+        matches.iter().for_each(|m| println!("  {}", m.ref_name));
+        anyhow::bail!("Matched multiple branches")
+        // TODO: Implement multiple branch match selection
+    }
+
+    f(&matches
+        .first()
+        .expect("Failed to get first matched branch")
+        .ref_name)
 }

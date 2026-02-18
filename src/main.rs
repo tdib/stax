@@ -46,7 +46,7 @@ fn main() {
     let mut state = StateCtx::load().expect("Failed to load Stax state");
 
     let result = match cli.cmd {
-        Cmd::Checkout { branch_name } => checkout(branch_name, &state),
+        Cmd::Checkout { branch_name } => checkout(branch_name),
         Cmd::Prune => prune(&mut state),
         Cmd::Rebase { onto } => rebase(onto, &mut state),
         Cmd::Stack { branch_name } => create_child_branch(&branch_name, &mut state),
