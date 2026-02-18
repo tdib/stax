@@ -61,6 +61,7 @@ pub fn get_git_branches() -> anyhow::Result<Vec<GitBranch>> {
 
 pub fn git_checkout(branch_name: &str) -> anyhow::Result<()> {
     // TODO: Add support for checkout to worktrees
+    println!("Checking out branch '{branch_name}'");
     let out = Command::new("git")
         .args(["checkout", branch_name])
         .output()?;
