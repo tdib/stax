@@ -1,4 +1,5 @@
 use anyhow::Context;
+use std::collections::HashSet;
 
 use crate::git_util::{
     GitBranch, create_git_branch, get_current_git_branch, get_git_branches, git_branch_exists,
@@ -156,10 +157,39 @@ pub fn checkout(branch_matchers: Vec<String>, state: &StateCtx) -> anyhow::Resul
 
 pub fn prune(state: &mut StateCtx) -> anyhow::Result<()> {
     let git_branches = get_git_branches().expect("Failed to get git branches");
+    let git_branch_names: Vec<&String> = git_branches.iter().map(|b| &b.ref_name).collect();
+
+    let branches_to_remove = state
+        .branches
+        .iter()
+        .filter(|b| !&git_branch_names.contains(&&b.name))
+        .collect::<Vec<&Branch>>();
+    let branch_names_to_remove: HashSet<String> =
+        branches_to_remove.iter().map(|b| b.name.clone()).collect();
 
     state.modify(|s| {
+        for name in &branch_names_to_remove {
+            println!("Pruning {name}");
+        }
+
+        for tracked_branch in &mut s.branches {
+            // Delete any parents that refer to now deleted branches
+            if tracked_branch
+                .parent
+                .as_ref()
+                .is_some_and(|parent_name| branch_names_to_remove.contains(parent_name))
+            {
+                tracked_branch.parent = None;
+            }
+
+            // Delete any children that refer to now deleted branches
+            tracked_branch
+                .children
+                .retain(|child| !branch_names_to_remove.contains(child));
+        }
+
         s.branches
-            .retain(|b| git_branches.iter().any(|g| g.ref_name == b.name))
+            .retain(|b| !branch_names_to_remove.contains(&b.name));
     });
 
     Ok(())
