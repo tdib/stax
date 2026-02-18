@@ -153,3 +153,14 @@ pub fn checkout(branch_matchers: Vec<String>, state: &StateCtx) -> anyhow::Resul
             .ref_name,
     )
 }
+
+pub fn prune(state: &mut StateCtx) -> anyhow::Result<()> {
+    let git_branches = get_git_branches().expect("Failed to get git branches");
+
+    state.modify(|s| {
+        s.branches
+            .retain(|b| git_branches.iter().any(|g| g.ref_name == b.name))
+    });
+
+    Ok(())
+}
